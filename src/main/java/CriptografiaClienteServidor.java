@@ -1,4 +1,5 @@
 import javax.crypto.Cipher;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -8,7 +9,8 @@ public class CriptografiaClienteServidor {
     public static KeyPair gerarChavesPublicoPrivada() throws NoSuchAlgorithmException {
         KeyPairGenerator geradorChave = KeyPairGenerator.getInstance("RSA");
         geradorChave.initialize(2048);
-        return geradorChave.generateKeyPair();
+        KeyPair pair = geradorChave.generateKeyPair();
+        return pair;
     }
 
     public static String cifrar(String mensagem, PublicKey publicKey) throws Exception {
@@ -21,8 +23,7 @@ public class CriptografiaClienteServidor {
         return Base64.getEncoder().encodeToString(bytesChripto);
     }
 
-    public static String decifrar(String mensagem, PrivateKey privateKey) throws Exception{
-
+    public static String decifrar(String mensagem, PrivateKey privateKey) throws Exception {
         byte[] bytesCifrados = Base64.getDecoder().decode(mensagem);
         Cipher cifrador = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 
@@ -30,17 +31,13 @@ public class CriptografiaClienteServidor {
         byte[] mensagemDecifrada = cifrador.doFinal(bytesCifrados);
 
         return new String(mensagemDecifrada, "UTF8");
-
     }
 
-    public static PublicKey bytesParaChave(byte[] bytesChave) throws Exception {
-
+    public static PublicKey bytesParaChave(byte[] bytesChave) throws Exception{
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(bytesChave);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(keySpec);
-
     }
-
 
 
 }
