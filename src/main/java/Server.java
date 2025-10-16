@@ -12,18 +12,18 @@ public class Server {
     private Socket socketCliente;
     private ServerSocket serverSocket;
 
-    public boolean connect(){
+    public boolean connect() {
         try {
             socketCliente = serverSocket.accept();
             return socketCliente.isConnected();
-        }catch (IOException erro){
-            System.err.println("Não faz conexão: "+erro.getMessage());
+        } catch (IOException erro) {
+            System.err.println("Não fez conexão: " + erro.getMessage());
             return false;
         }
     }
 
-    public  static void main(String[] args){
-        try{
+    public static void main(String[] args) {
+        try {
             Server servidor = new Server();
             servidor.rodarServidor();
         } catch (Exception e) {
@@ -32,8 +32,7 @@ public class Server {
     }
 
     public void rodarServidor() throws Exception {
-
-        String textoRecebido ="";
+        String textoRecebido = "";
         String textoEnviado = "Olá, Cliente";
         String textoDecifrado;
         String textoCifrado;
@@ -41,38 +40,42 @@ public class Server {
         Scanner input = new Scanner(System.in);
 
         serverSocket = new ServerSocket(9600);
-        System.out.println("Servidor inciado!");
+        System.out.println("Servidor iniciado!");
 
-        while(true){
-            if(connect()){
-
+        while (true) {
+            if (connect()) {
                 System.out.println("Gerando chave RSA...");
                 KeyPair chaves = CriptografiaClienteServidor.gerarChavesPublicoPrivada();
 
-                System.out.println("Enviando chave p[ublica...");
+                System.out.println("Enviando chave pública...");
                 Conexao.enviarChave(socketCliente, chaves.getPublic());
 
                 System.out.println("Recebendo chave pública do cliente...");
                 PublicKey chavePublica = Conexao.receberChave(socketCliente);
 
-                textoRecebido = Conexao.receber(socketCliente);
-                System.out.println("\nMensagem recebida: "+textoRecebido);
+                while (true) {
+                    textoRecebido = Conexao.receber(socketCliente);
+                    System.out.println("\nMensagem recebida: " + textoRecebido);
 
-                textoDecifrado = CriptografiaClienteServidor.decifrar(textoRecebido, chaves.getPrivate());
+                    textoDecifrado = CriptografiaClienteServidor.decifrar(textoRecebido, chaves.getPrivate());
+                    System.out.println("Cliente enviou: " + textoDecifrado);
 
-                System.out.println("Cliente enviou: "+textoDecifrado);
-                System.out.println("Digite a sua mensagem...");
-                textoEnviado = input.nextLine();
+                    if ("sair".equalsIgnoreCase(textoDecifrado)) {
+                        System.out.println("Cliente encerrou a comunicação.");
+                        break;
+                    }
 
-                textoCifrado = CriptografiaClienteServidor.cifrar(textoEnviado, chavePublica);
-                System.out.println("Texto enviado: "+textoCifrado);
+                    System.out.println("Digite a sua mensagem...");
+                    textoEnviado = input.nextLine();
 
-                Conexao.enviar(socketCliente, textoCifrado);
+                    textoCifrado = CriptografiaClienteServidor.cifrar(textoEnviado, chavePublica);
+                    System.out.println("Texto enviado: " + textoCifrado);
+
+                    Conexao.enviar(socketCliente, textoCifrado);
+                }
+
                 socketCliente.close();
-
             }
         }
-
     }
-
 }
